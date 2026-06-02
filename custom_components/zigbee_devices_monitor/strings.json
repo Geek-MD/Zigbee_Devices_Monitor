@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Zigbee Devices Monitor",
+        "description": "Configure Zigbee unavailable devices monitoring.",
+        "data": {
+          "name": "Sensor name",
+          "zigbee_domain": "Zigbee integration domain",
+          "unavailable_timeout": "Unavailable timeout (seconds)",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance is allowed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Zigbee Devices Monitor options",
+        "description": "Update Zigbee monitoring options.",
+        "data": {
+          "name": "Sensor name",
+          "zigbee_domain": "Zigbee integration domain",
+          "unavailable_timeout": "Unavailable timeout (seconds)",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    }
+  }
+}
