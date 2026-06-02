@@ -17,15 +17,18 @@ from homeassistant.helpers.event import async_track_time_interval
 DEFAULT_NAME = "Zigbee Devices Warning"
 DEFAULT_UNAVAILABLE_TIMEOUT = 300
 DEFAULT_ZIGBEE_DOMAIN = "zha"
+DEFAULT_SCAN_INTERVAL = 30
 
 CONF_UNAVAILABLE_TIMEOUT = "unavailable_timeout"
 CONF_ZIGBEE_DOMAIN = "zigbee_domain"
+CONF_SCAN_INTERVAL = "scan_interval"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNAVAILABLE_TIMEOUT, default=DEFAULT_UNAVAILABLE_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_ZIGBEE_DOMAIN, default=DEFAULT_ZIGBEE_DOMAIN): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.positive_int,
     }
 )
 
@@ -44,6 +47,7 @@ async def async_setup_platform(
                 config[CONF_NAME],
                 config[CONF_UNAVAILABLE_TIMEOUT],
                 config[CONF_ZIGBEE_DOMAIN],
+                config[CONF_SCAN_INTERVAL],
             )
         ],
         True,
@@ -61,13 +65,16 @@ class ZigbeeWarningSensor(SensorEntity):
         name: str,
         unavailable_timeout: int,
         zigbee_domain: str,
+        scan_interval: int,
     ) -> None:
         self.hass = hass
         self._attr_name = name
-        self._attr_unique_id = f"zigbee_warning_{zigbee_domain}_{unavailable_timeout}"
+        self._attr_unique_id = f"zigbee_warning_{zigbee_domain}"
+        self._attr_should_poll = False
         self._timeout = timedelta(seconds=unavailable_timeout)
         self._timeout_seconds = unavailable_timeout
         self._zigbee_domain = zigbee_domain
+        self._scan_interval = scan_interval
         self._unavailable_since: dict[str, float] = {}
         self._unavailable_devices: list[str] = []
         self._cancel_interval: Callable[[], None] | None = None
@@ -83,6 +90,7 @@ class ZigbeeWarningSensor(SensorEntity):
         return {
             "zigbee_domain": self._zigbee_domain,
             "timeout_seconds": self._timeout_seconds,
+            "scan_interval": self._scan_interval,
             "unavailable_count": len(self._unavailable_devices),
             "unavailable_devices": self._unavailable_devices,
         }
@@ -92,7 +100,7 @@ class ZigbeeWarningSensor(SensorEntity):
         self._cancel_interval = async_track_time_interval(
             self.hass,
             self._async_update_from_states,
-            timedelta(seconds=30),
+            timedelta(seconds=self._scan_interval),
         )
 
     async def async_will_remove_from_hass(self) -> None:

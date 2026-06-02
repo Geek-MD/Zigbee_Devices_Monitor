@@ -15,6 +15,7 @@ sensor:
     name: Zigbee Devices Warning
     zigbee_domain: zha
     unavailable_timeout: 300
+    scan_interval: 30
 ```
 
 ### Opciones
@@ -22,6 +23,7 @@ sensor:
 - `name`: nombre del sensor.
 - `zigbee_domain`: dominio de la integración Zigbee a monitorizar (por defecto: `zha`).
 - `unavailable_timeout`: segundos de espera antes de marcar un dispositivo como no disponible (por defecto: `300`).
+- `scan_interval`: frecuencia en segundos para revisar el estado de las entidades (por defecto: `30`).
 
 ## Comportamiento del sensor
 
