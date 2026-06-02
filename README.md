@@ -7,16 +7,17 @@ Integración de Home Assistant que crea un sensor de advertencia para monitoriza
 1. Copia la carpeta `custom_components/zigbee_devices_monitor` en tu instalación de Home Assistant.
 2. Reinicia Home Assistant.
 
-## Configuración (`configuration.yaml`)
+## Configuración desde la UI
 
-```yaml
-sensor:
-  - platform: zigbee_devices_monitor
-    name: Zigbee Devices Warning
-    zigbee_domain: zha
-    unavailable_timeout: 300
-    scan_interval: 30
-```
+1. Ve a **Ajustes → Dispositivos y servicios → Añadir integración**.
+2. Busca **Zigbee Devices Monitor**.
+3. Define los parámetros iniciales en el formulario de la integración.
+
+### Reconfiguración desde la UI
+
+1. Ve a **Ajustes → Dispositivos y servicios**.
+2. Abre la integración **Zigbee Devices Monitor**.
+3. Pulsa **Configurar** para ajustar los valores cuando quieras.
 
 ### Opciones
 

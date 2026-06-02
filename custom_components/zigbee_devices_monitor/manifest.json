@@ -1,8 +1,9 @@
 {
   "domain": "zigbee_devices_monitor",
   "name": "Zigbee Devices Monitor",
-  "version": "1.0.1",
+  "version": "0.1.0",
   "documentation": "https://github.com/Geek-MD/Zigbee_Devices_Monitor",
+  "config_flow": true,
   "requirements": [],
   "codeowners": [
     "@Geek-MD"

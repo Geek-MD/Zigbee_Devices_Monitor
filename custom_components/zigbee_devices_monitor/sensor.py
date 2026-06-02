@@ -5,49 +5,42 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
-DEFAULT_NAME = "Zigbee Devices Warning"
-DEFAULT_UNAVAILABLE_TIMEOUT = 300
-DEFAULT_ZIGBEE_DOMAIN = "zha"
-DEFAULT_SCAN_INTERVAL = 30
-
-CONF_UNAVAILABLE_TIMEOUT = "unavailable_timeout"
-CONF_ZIGBEE_DOMAIN = "zigbee_domain"
-CONF_SCAN_INTERVAL = "scan_interval"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNAVAILABLE_TIMEOUT, default=DEFAULT_UNAVAILABLE_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_ZIGBEE_DOMAIN, default=DEFAULT_ZIGBEE_DOMAIN): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.positive_int,
-    }
+from .const import (
+    CONF_SCAN_INTERVAL,
+    CONF_UNAVAILABLE_TIMEOUT,
+    CONF_ZIGBEE_DOMAIN,
+    DEFAULT_NAME,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_UNAVAILABLE_TIMEOUT,
+    DEFAULT_ZIGBEE_DOMAIN,
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict | None = None,
 ) -> None:
-    """Set up the Zigbee warning sensor."""
+    """Set up Zigbee warning sensor from a config entry."""
+    values = {**config_entry.data, **config_entry.options}
     async_add_entities(
         [
             ZigbeeWarningSensor(
-                hass,
-                config[CONF_NAME],
-                config[CONF_UNAVAILABLE_TIMEOUT],
-                config[CONF_ZIGBEE_DOMAIN],
-                config[CONF_SCAN_INTERVAL],
+                hass=hass,
+                name=str(values.get(CONF_NAME, DEFAULT_NAME)),
+                unavailable_timeout=int(
+                    values.get(CONF_UNAVAILABLE_TIMEOUT, DEFAULT_UNAVAILABLE_TIMEOUT)
+                ),
+                zigbee_domain=str(values.get(CONF_ZIGBEE_DOMAIN, DEFAULT_ZIGBEE_DOMAIN)),
+                scan_interval=int(values.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
             )
         ],
         True,
@@ -58,6 +51,7 @@ class ZigbeeWarningSensor(SensorEntity):
     """Monitor Zigbee entities and report unavailability warnings."""
 
     _attr_icon = "mdi:alert"
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -70,7 +64,6 @@ class ZigbeeWarningSensor(SensorEntity):
         self._hass = hass
         self._attr_name = name
         self._attr_unique_id = f"zigbee_warning_{zigbee_domain}"
-        self._attr_should_poll = False
         self._timeout = timedelta(seconds=unavailable_timeout)
         self._timeout_seconds = unavailable_timeout
         self._zigbee_domain = zigbee_domain
