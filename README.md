@@ -23,6 +23,7 @@ A custom Home Assistant integration that monitors entities from a Zigbee integra
 - Automatically scans entities linked to the configured Zigbee integration domain.
 - Configurable entirely from the Home Assistant UI.
 - Supports post-install reconfiguration through integration options.
+- Manifest aligned with Home Assistant validation requirements (`iot_class`, `issue_tracker`).
 - HACS-compatible.
 
 ## Requirements
