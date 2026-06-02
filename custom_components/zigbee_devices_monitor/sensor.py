@@ -67,7 +67,7 @@ class ZigbeeWarningSensor(SensorEntity):
         zigbee_domain: str,
         scan_interval: int,
     ) -> None:
-        self.hass = hass
+        self._hass = hass
         self._attr_name = name
         self._attr_unique_id = f"zigbee_warning_{zigbee_domain}"
         self._attr_should_poll = False
@@ -98,7 +98,7 @@ class ZigbeeWarningSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register periodic updates."""
         self._cancel_interval = async_track_time_interval(
-            self.hass,
+            self._hass,
             self._async_update_from_states,
             timedelta(seconds=self._scan_interval),
         )
@@ -108,10 +108,6 @@ class ZigbeeWarningSensor(SensorEntity):
         if self._cancel_interval:
             self._cancel_interval()
 
-    async def async_update(self) -> None:
-        """Fetch latest data."""
-        self._process_states()
-
     @callback
     def _async_update_from_states(self, _now: datetime) -> None:
         """Process tracked states and write entity state."""
@@ -120,11 +116,11 @@ class ZigbeeWarningSensor(SensorEntity):
 
     def _process_states(self) -> None:
         """Update unavailable entities list based on timeout."""
-        current_time = self.hass.loop.time()
+        current_time = self._hass.loop.time()
         zigbee_entities = self._get_zigbee_entities()
 
         for entity_id in zigbee_entities:
-            state = self.hass.states.get(entity_id)
+            state = self._hass.states.get(entity_id)
             if state and state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 self._unavailable_since.setdefault(entity_id, current_time)
             else:
@@ -146,7 +142,7 @@ class ZigbeeWarningSensor(SensorEntity):
 
     def _get_zigbee_entities(self) -> set[str]:
         """Get entities bound to the configured Zigbee integration domain."""
-        registry = er.async_get(self.hass)
+        registry = er.async_get(self._hass)
         zigbee_entities: set[str] = set()
 
         for entity in registry.entities.values():
@@ -157,7 +153,7 @@ class ZigbeeWarningSensor(SensorEntity):
             if not config_entry_id:
                 continue
 
-            config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+            config_entry = self._hass.config_entries.async_get_entry(config_entry_id)
             if config_entry and config_entry.domain == self._zigbee_domain:
                 zigbee_entities.add(entity.entity_id)
 
