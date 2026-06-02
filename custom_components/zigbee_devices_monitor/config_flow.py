@@ -47,7 +47,8 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
     )
 
 
-# Home Assistant config flow pattern uses `domain=` at class declaration time.
+# Home Assistant uses `domain=` as a class keyword argument at declaration time,
+# which mypy flags even though this is the framework's documented pattern.
 class ZigbeeDevicesMonitorConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for Zigbee Devices Monitor."""
 
