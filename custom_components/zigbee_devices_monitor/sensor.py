@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -113,7 +113,7 @@ class ZigbeeWarningSensor(SensorEntity):
         self._process_states()
 
     @callback
-    def _async_update_from_states(self, _now) -> None:
+    def _async_update_from_states(self, _now: datetime) -> None:
         """Process tracked states and write entity state."""
         self._process_states()
         self.async_write_ha_state()
