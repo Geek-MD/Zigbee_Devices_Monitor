@@ -1,10 +1,16 @@
 # Changelog
 
-## 0.1.0
+All notable changes to this project will be documented in this file.
 
-- Primera versión de la integración.
-- Se añade configuración inicial desde la UI mediante `config_flow`.
-- Se añade reconfiguración desde la UI mediante opciones de la integración.
-- Se agregan GitHub Actions (`ci.yaml` y `validate.yml`) y archivos base asociados (`requirements.txt`, `mypy.ini`, `hacs.json`).
-- Se crea un sensor de tipo advertencia (`ok`/`warning`) para monitorizar entidades Zigbee no disponibles.
-- Se añade configuración de tiempo de espera (`unavailable_timeout`), dominio Zigbee (`zigbee_domain`) y frecuencia de revisión (`scan_interval`).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [v0.1.0] - 2026-06-02
+
+### Added
+- Initial release of **Zigbee Devices Monitor**.
+- UI config flow (`config_flow`) for first-time setup.
+- Options flow support to reconfigure the integration from Home Assistant UI.
+- Warning sensor with `ok`/`warning` states to monitor Zigbee availability.
+- Configurable `name`, `zigbee_domain`, `unavailable_timeout`, and `scan_interval`.
+- CI workflows (`ci.yaml`, `validate.yml`) with Ruff, mypy, and validation checks.
