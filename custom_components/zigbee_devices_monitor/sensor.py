@@ -30,6 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Zigbee warning sensor from a config entry."""
+    # Options are user-edited values and must override initial entry data.
     values = {**config_entry.data, **config_entry.options}
     async_add_entities(
         [

@@ -47,6 +47,7 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
     )
 
 
+# Home Assistant config flow pattern uses `domain=` at class declaration time.
 class ZigbeeDevicesMonitorConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for Zigbee Devices Monitor."""
 
