@@ -1,7 +1,14 @@
+[![Geek-MD - Zigbee Devices Monitor](https://img.shields.io/static/v1?label=Geek-MD&message=Zigbee%20Devices%20Monitor&color=blue&logo=github)](https://github.com/Geek-MD/Zigbee_Devices_Monitor)
+[![Stars](https://img.shields.io/github/stars/Geek-MD/Zigbee_Devices_Monitor?style=social)](https://github.com/Geek-MD/Zigbee_Devices_Monitor)
+[![Forks](https://img.shields.io/github/forks/Geek-MD/Zigbee_Devices_Monitor?style=social)](https://github.com/Geek-MD/Zigbee_Devices_Monitor)
+
 [![GitHub Release](https://img.shields.io/github/release/Geek-MD/Zigbee_Devices_Monitor?include_prereleases&sort=semver&color=blue)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/LICENSE)
 [![HACS Custom Repository](https://img.shields.io/badge/HACS-Custom%20Repository-blue)](https://hacs.xyz/)
+
 [![Ruff + Mypy + Hassfest](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml/badge.svg)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 
 <img src="https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/custom_components/zigbee_devices_monitor/brand/icon.png?raw=true" width="180" alt="Zigbee Devices Monitor icon" />
 
