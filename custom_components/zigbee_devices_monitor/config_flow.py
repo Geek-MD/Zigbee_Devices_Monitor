@@ -17,11 +17,9 @@ from homeassistant.const import CONF_NAME
 from .const import (
     CONF_SCAN_INTERVAL,
     CONF_UNAVAILABLE_TIMEOUT,
-    CONF_ZIGBEE_DOMAIN,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_UNAVAILABLE_TIMEOUT,
-    DEFAULT_ZIGBEE_DOMAIN,
     DOMAIN,
 )
 
@@ -31,10 +29,6 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
-            vol.Required(
-                CONF_ZIGBEE_DOMAIN,
-                default=defaults[CONF_ZIGBEE_DOMAIN],
-            ): str,
             vol.Required(
                 CONF_UNAVAILABLE_TIMEOUT,
                 default=defaults[CONF_UNAVAILABLE_TIMEOUT],
@@ -69,7 +63,6 @@ class ZigbeeDevicesMonitorConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore
 
         defaults = {
             CONF_NAME: DEFAULT_NAME,
-            CONF_ZIGBEE_DOMAIN: DEFAULT_ZIGBEE_DOMAIN,
             CONF_UNAVAILABLE_TIMEOUT: DEFAULT_UNAVAILABLE_TIMEOUT,
             CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         }
@@ -97,10 +90,6 @@ class ZigbeeDevicesMonitorOptionsFlow(OptionsFlow):
         defaults = {
             CONF_NAME: self.config_entry.options.get(
                 CONF_NAME, self.config_entry.data.get(CONF_NAME, DEFAULT_NAME)
-            ),
-            CONF_ZIGBEE_DOMAIN: self.config_entry.options.get(
-                CONF_ZIGBEE_DOMAIN,
-                self.config_entry.data.get(CONF_ZIGBEE_DOMAIN, DEFAULT_ZIGBEE_DOMAIN),
             ),
             CONF_UNAVAILABLE_TIMEOUT: self.config_entry.options.get(
                 CONF_UNAVAILABLE_TIMEOUT,

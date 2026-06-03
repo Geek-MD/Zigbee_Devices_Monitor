@@ -14,15 +14,17 @@
 
 # Zigbee Devices Monitor
 
-A custom Home Assistant integration that monitors entities from a Zigbee integration domain (for example `zha`) and exposes a single warning sensor.
+A custom Home Assistant integration that monitors Zigbee devices from ZHA and/or Zigbee2MQTT and exposes a single warning sensor.
 
 ## Features
 
 - Creates one sensor that reports overall Zigbee availability status.
 - Sensor states:
-  - `ok`: no Zigbee entities have been unavailable longer than the configured timeout.
-  - `warning`: one or more Zigbee entities have been unavailable longer than the configured timeout.
-- Automatically scans entities linked to the configured Zigbee integration domain.
+  - `ok`: no Zigbee devices have been offline longer than the configured timeout.
+  - `warning`: one or more Zigbee devices have been offline longer than the configured timeout.
+- **Automatically detects** which Zigbee integration(s) are installed (ZHA and/or Zigbee2MQTT) — no manual domain configuration required.
+- Monitors at the **device level**: a device is marked offline only when all of its entities report `unavailable` or `unknown` state.
+- Reports offline **device names** (human-readable) instead of raw entity IDs.
 - Configurable entirely from the Home Assistant UI.
 - Supports post-install reconfiguration through integration options.
 - Manifest aligned with Home Assistant validation requirements (`iot_class`, `issue_tracker`).
@@ -67,8 +69,7 @@ The integration is configured through the UI.
 | Option | Description | Default |
 |--------|-------------|---------|
 | Name (`name`) | Name of the warning sensor entity | `Zigbee Devices Warning` |
-| Zigbee domain (`zigbee_domain`) | Integration domain to monitor (`zha`, `z2m`, etc.) | `zha` |
-| Unavailable timeout (`unavailable_timeout`) | Seconds an entity must remain unavailable before alerting | `300` |
+| Unavailable timeout (`unavailable_timeout`) | Seconds a device must remain offline before alerting | `300` |
 | Scan interval (`scan_interval`) | Seconds between availability scans | `30` |
 
 ### Reconfigure later
@@ -88,11 +89,11 @@ The integration creates a sensor with the configured name.
 
 ### Attributes
 
-- `zigbee_domain`: monitored domain.
-- `timeout_seconds`: timeout used to mark entities as unavailable.
+- `detected_integrations`: list of Zigbee integration domains found (e.g. `["zha"]`, `["zigbee2mqtt"]`, or both).
+- `timeout_seconds`: timeout used to mark devices as offline.
 - `scan_interval`: periodic check interval.
-- `unavailable_count`: total entities currently in warning condition.
-- `unavailable_devices`: list of affected entity IDs.
+- `unavailable_count`: total devices currently in warning condition.
+- `unavailable_devices`: list of offline device names.
 
 ## Changelog
 
