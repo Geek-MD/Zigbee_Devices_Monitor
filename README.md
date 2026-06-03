@@ -1,128 +1,97 @@
-[![Geek-MD - Zigbee Devices Monitor](https://img.shields.io/static/v1?label=Geek-MD&message=Zigbee%20Devices%20Monitor&color=blue&logo=github)](https://github.com/Geek-MD/Zigbee_Devices_Monitor)
-[![Stars](https://img.shields.io/github/stars/Geek-MD/Zigbee_Devices_Monitor?style=social)](https://github.com/Geek-MD/Zigbee_Devices_Monitor)
-[![Forks](https://img.shields.io/github/forks/Geek-MD/Zigbee_Devices_Monitor?style=social)](https://github.com/Geek-MD/Zigbee_Devices_Monitor)
-
 [![GitHub Release](https://img.shields.io/github/release/Geek-MD/Zigbee_Devices_Monitor?include_prereleases&sort=semver&color=blue)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/releases)
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/LICENSE)
 [![HACS Custom Repository](https://img.shields.io/badge/HACS-Custom%20Repository-blue)](https://hacs.xyz/)
-
 [![Ruff + Mypy + Hassfest](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml/badge.svg)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml)
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 
-<img width="200" height="200" alt="image" src="https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/custom_components/zigbee_devices_monitor/brand/icon.png?raw=true" />
+<p align="center">
+  <img src="https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/custom_components/zigbee_devices_monitor/brand/icon.png?raw=true" width="180" alt="Zigbee Devices Monitor icon" />
+</p>
 
 # Zigbee Devices Monitor
 
-A custom Home Assistant integration that monitors Zigbee devices from ZHA and/or Zigbee2MQTT and exposes a single warning binary sensor.
+Monitoriza disponibilidad de dispositivos Zigbee en Home Assistant y expone un único `binary_sensor` de alerta.
 
-## Features
+## ✨ Características
 
-- Creates one `binary_sensor` (`device_class: problem`) that reports overall Zigbee availability status.
-- Binary sensor states:
-  - `off`: no Zigbee devices have been offline longer than the configured timeout.
-  - `on`: one or more Zigbee devices have been offline longer than the configured timeout.
-- **Automatically detects** which Zigbee integration(s) are installed (ZHA and/or Zigbee2MQTT) — no manual domain configuration required.
-- Monitors at the **device level**: a device is marked offline only when all of its entities report `unavailable` or `unknown` state.
-- Reports offline **device names** (human-readable) instead of raw entity IDs.
-- Configurable entirely from the Home Assistant UI.
-- Supports post-install reconfiguration through integration options.
-- Manifest aligned with Home Assistant validation requirements (`iot_class`, `issue_tracker`).
-- HACS-compatible.
+- Detección automática de integraciones Zigbee instaladas (`zha` y/o `zigbee2mqtt`).
+- Monitorización a nivel **dispositivo** (no por entidad individual).
+- Entidad `binary_sensor` con `device_class: problem` (`off` / `on`).
+- Atributos con listado de dispositivos no disponibles e identificadores útiles para automatizaciones.
+- Acción `zigbee_devices_monitor.rediscover_unavailable` para redescubrir dispositivos ZHA no disponibles.
+- Registro en historial/logbook de cada dispositivo redescubierto.
 
-## Requirements
+## 📋 Requisitos
 
-| Requirement | Minimum version |
-|-------------|------------------|
+| Requisito | Versión mínima |
+|-----------|----------------|
 | Home Assistant | 2024.1.0 |
-| HACS (optional) | 1.6.0 |
+| HACS (opcional) | 1.6.0 |
 
-## Installation
+## 📦 Instalación
 
-### Via HACS (recommended)
+### Opción 1: HACS (recomendada)
 
-1. Open HACS → **Integrations**.
-2. Open the three-dot menu → **Custom repositories**.
-3. Add `https://github.com/Geek-MD/Zigbee_Devices_Monitor` as category **Integration**.
-4. Search for **Zigbee Devices Monitor** and install it.
-5. Restart Home Assistant.
+1. Ve a **HACS → Integrations**.
+2. Abre el menú de tres puntos → **Custom repositories**.
+3. Añade `https://github.com/Geek-MD/Zigbee_Devices_Monitor` como categoría **Integration**.
+4. Busca **Zigbee Devices Monitor** e instálala.
+5. Reinicia Home Assistant.
 
-### Manual
+### Opción 2: Manual
 
-1. Copy `custom_components/zigbee_devices_monitor` into `<config>/custom_components/`.
-2. Restart Home Assistant.
-3. Go to **Settings → Devices & Services → Add Integration**.
-4. Search for **Zigbee Devices Monitor**.
+1. Copia `custom_components/zigbee_devices_monitor` en `<config>/custom_components/`.
+2. Reinicia Home Assistant.
+3. Ve a **Settings → Devices & Services → Add Integration**.
+4. Busca **Zigbee Devices Monitor**.
 
-## Configuration
+## ⚙️ Configuración
 
-The integration is configured through the UI.
+La integración se configura completamente desde UI.
 
-### Initial setup
-
-1. Go to **Settings → Devices & Services → Add Integration**.
-2. Search for **Zigbee Devices Monitor**.
-3. Configure the options below and submit.
-
-### Options
-
-| Option | Description | Default |
+| Opción | Descripción | Default |
 |--------|-------------|---------|
-| Name (`name`) | Name of the warning binary sensor entity | `Zigbee Devices Warning` |
-| Unavailable timeout (`unavailable_timeout`) | Seconds a device must remain offline before alerting | `300` |
-| Scan interval (`scan_interval`) | Seconds between availability scans | `30` |
+| `name` | Nombre de la entidad de alerta | `Zigbee Devices Warning` |
+| `unavailable_timeout` | Segundos que un dispositivo debe estar offline para alertar | `300` |
+| `scan_interval` | Segundos entre escaneos | `30` |
 
-### Reconfigure later
+Para reconfigurarla más adelante: **Settings → Devices & Services → Zigbee Devices Monitor → Configure**.
 
-1. Go to **Settings → Devices & Services**.
-2. Open **Zigbee Devices Monitor**.
-3. Click **Configure**.
+## 🧠 Entidad creada
 
-## Sensor details
+La integración crea una entidad `binary_sensor` con:
 
-The integration creates a binary sensor with the configured name.
+- Estados: `off` / `on`
+- Atributos:
+  - `detected_integrations`
+  - `timeout_seconds`
+  - `scan_interval`
+  - `unavailable_count`
+  - `unavailable_devices`
+  - `unavailable_device_ids`
+  - `unavailable_device_ieee`
+  - `last_rediscovered_devices`
+  - `last_rediscover_message`
 
-### State
+## 🔄 Acción: `rediscover_unavailable`
 
-- `off`
-- `on`
+La acción de entidad `zigbee_devices_monitor.rediscover_unavailable`:
 
-### Attributes
+- Procesa dispositivos no disponibles de forma secuencial.
+- Permite configurar:
+  - `tries` (default: `3`)
+  - `delay` (default: `0.1`)
+- Registra en historial/logbook qué dispositivo se redescubrió.
+- Actualiza atributos de la entidad para facilitar trazas en automatizaciones.
 
-- `detected_integrations`: list of Zigbee integration domains found (e.g. `["zha"]`, `["zigbee2mqtt"]`, or both).
-- `timeout_seconds`: timeout used to mark devices as offline.
-- `scan_interval`: periodic check interval.
-- `unavailable_count`: total devices currently in warning condition.
-- `unavailable_devices`: list of offline device names.
-- `unavailable_device_ids`: list of Home Assistant device registry IDs currently offline.
-- `unavailable_device_ieee`: list of unavailable ZHA device IEEE addresses.
+## 🗂️ Changelog
 
-## Action: rediscover unavailable devices
+Consulta [CHANGELOG.md](CHANGELOG.md).
 
-The entity action `zigbee_devices_monitor.rediscover_unavailable` re-runs ZHA join handling for unavailable ZHA devices listed by the monitor.
+## 🛟 Soporte
 
-- Devices are always processed **sequentially** (one by one), including when more than one is unavailable.
-- Each device supports configurable retries and delay between retries.
-- Defaults match ZHA Toolkit retry defaults:
-  - `tries`: `3`
-  - `delay`: `0.1` seconds
+Si encuentras un problema o quieres proponer una mejora, abre un issue en:
+<https://github.com/Geek-MD/Zigbee_Devices_Monitor/issues>
 
-## Changelog
+## 📄 Licencia
 
-See [CHANGELOG.md](CHANGELOG.md).
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
-
-## Support
-
-For issues or feature requests, use the [GitHub issue tracker](https://github.com/Geek-MD/Zigbee_Devices_Monitor/issues).
-
----
-
-<div align="center">
-
-💻 **Proudly developed with GitHub Copilot** 🚀
-
-</div>
+Este proyecto está licenciado bajo [MIT](LICENSE).

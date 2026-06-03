@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.1] - 2026-06-03
+
+### Changed
+- The `rediscover_unavailable` action now records each successfully rediscovered device in Home Assistant history/logbook.
+- Rediscover action updates the monitor entity with `last_rediscovered_devices` and `last_rediscover_message` to improve automation trace visibility.
+- README was reorganized with a cleaner, consistent style and updated action/attribute documentation.
+
 ## [v0.2.0] - 2026-06-03
 
 ### Changed
