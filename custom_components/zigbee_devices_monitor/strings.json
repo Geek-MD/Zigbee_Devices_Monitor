@@ -3,10 +3,9 @@
     "step": {
       "user": {
         "title": "Zigbee Devices Monitor",
-        "description": "Configure Zigbee unavailable devices monitoring.",
+        "description": "Configure Zigbee unavailable devices monitoring. The integration will automatically detect ZHA and Zigbee2MQTT.",
         "data": {
           "name": "Sensor name",
-          "zigbee_domain": "Zigbee integration domain",
           "unavailable_timeout": "Unavailable timeout (seconds)",
           "scan_interval": "Scan interval (seconds)"
         }
@@ -23,7 +22,6 @@
         "description": "Update Zigbee monitoring options.",
         "data": {
           "name": "Sensor name",
-          "zigbee_domain": "Zigbee integration domain",
           "unavailable_timeout": "Unavailable timeout (seconds)",
           "scan_interval": "Scan interval (seconds)"
         }
