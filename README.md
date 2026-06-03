@@ -9,59 +9,59 @@
 
 # Zigbee Devices Monitor
 
-Monitoriza disponibilidad de dispositivos Zigbee en Home Assistant y expone un único `binary_sensor` de alerta.
+A Home Assistant custom integration that monitors Zigbee device availability and exposes a single warning `binary_sensor`.
 
-## ✨ Características
+## ✨ Features
 
-- Detección automática de integraciones Zigbee instaladas (`zha` y/o `zigbee2mqtt`).
-- Monitorización a nivel **dispositivo** (no por entidad individual).
-- Entidad `binary_sensor` con `device_class: problem` (`off` / `on`).
-- Atributos con listado de dispositivos no disponibles e identificadores útiles para automatizaciones.
-- Acción `zigbee_devices_monitor.rediscover_unavailable` para redescubrir dispositivos ZHA no disponibles.
-- Registro en historial/logbook de cada dispositivo redescubierto.
+- Automatically detects installed Zigbee integrations (`zha` and/or `zigbee2mqtt`).
+- Monitors availability at the **device level** (not per-entity).
+- Creates one `binary_sensor` with `device_class: problem` (`off` / `on`).
+- Exposes attributes with unavailable device details and rediscovery inputs.
+- Provides the `zigbee_devices_monitor.rediscover_unavailable` action for unavailable ZHA devices.
+- Writes one history/logbook entry per successfully rediscovered device.
 
-## 📋 Requisitos
+## 📋 Requirements
 
-| Requisito | Versión mínima |
-|-----------|----------------|
+| Requirement | Minimum version |
+|-------------|-----------------|
 | Home Assistant | 2024.1.0 |
-| HACS (opcional) | 1.6.0 |
+| HACS (optional) | 1.6.0 |
 
-## 📦 Instalación
+## 📦 Installation
 
-### Opción 1: HACS (recomendada)
+### Option 1: HACS (recommended)
 
-1. Ve a **HACS → Integrations**.
-2. Abre el menú de tres puntos → **Custom repositories**.
-3. Añade `https://github.com/Geek-MD/Zigbee_Devices_Monitor` como categoría **Integration**.
-4. Busca **Zigbee Devices Monitor** e instálala.
-5. Reinicia Home Assistant.
+1. Open **HACS → Integrations**.
+2. Open the three-dot menu → **Custom repositories**.
+3. Add `https://github.com/Geek-MD/Zigbee_Devices_Monitor` as **Integration**.
+4. Search for **Zigbee Devices Monitor** and install.
+5. Restart Home Assistant.
 
-### Opción 2: Manual
+### Option 2: Manual
 
-1. Copia `custom_components/zigbee_devices_monitor` en `<config>/custom_components/`.
-2. Reinicia Home Assistant.
-3. Ve a **Settings → Devices & Services → Add Integration**.
-4. Busca **Zigbee Devices Monitor**.
+1. Copy `custom_components/zigbee_devices_monitor` to `<config>/custom_components/`.
+2. Restart Home Assistant.
+3. Go to **Settings → Devices & Services → Add Integration**.
+4. Search for **Zigbee Devices Monitor**.
 
-## ⚙️ Configuración
+## ⚙️ Configuration
 
-La integración se configura completamente desde UI.
+Configuration is fully UI-based.
 
-| Opción | Descripción | Default |
+| Option | Description | Default |
 |--------|-------------|---------|
-| `name` | Nombre de la entidad de alerta | `Zigbee Devices Warning` |
-| `unavailable_timeout` | Segundos que un dispositivo debe estar offline para alertar | `300` |
-| `scan_interval` | Segundos entre escaneos | `30` |
+| `name` | Warning entity name | `Zigbee Devices Warning` |
+| `unavailable_timeout` | Seconds a device must be offline before alerting | `300` |
+| `scan_interval` | Seconds between scans | `30` |
 
-Para reconfigurarla más adelante: **Settings → Devices & Services → Zigbee Devices Monitor → Configure**.
+To reconfigure later: **Settings → Devices & Services → Zigbee Devices Monitor → Configure**.
 
-## 🧠 Entidad creada
+## 🧠 Created entity
 
-La integración crea una entidad `binary_sensor` con:
+The integration creates one `binary_sensor` with:
 
-- Estados: `off` / `on`
-- Atributos:
+- States: `off` / `on`
+- Attributes:
   - `detected_integrations`
   - `timeout_seconds`
   - `scan_interval`
@@ -72,26 +72,26 @@ La integración crea una entidad `binary_sensor` con:
   - `last_rediscovered_devices`
   - `last_rediscover_message`
 
-## 🔄 Acción: `rediscover_unavailable`
+## 🔄 Action: `rediscover_unavailable`
 
-La acción de entidad `zigbee_devices_monitor.rediscover_unavailable`:
+The entity action `zigbee_devices_monitor.rediscover_unavailable`:
 
-- Procesa dispositivos no disponibles de forma secuencial.
-- Permite configurar:
+- Processes unavailable devices sequentially.
+- Supports:
   - `tries` (default: `3`)
   - `delay` (default: `0.1`)
-- Registra en historial/logbook qué dispositivo se redescubrió.
-- Actualiza atributos de la entidad para facilitar trazas en automatizaciones.
+- Records each successful rediscovery in Home Assistant history/logbook.
+- Updates entity attributes to improve visibility in automation traces.
 
 ## 🗂️ Changelog
 
-Consulta [CHANGELOG.md](CHANGELOG.md).
+See [CHANGELOG.md](CHANGELOG.md).
 
-## 🛟 Soporte
+## 🛟 Support
 
-Si encuentras un problema o quieres proponer una mejora, abre un issue en:
+For issues or feature requests:
 <https://github.com/Geek-MD/Zigbee_Devices_Monitor/issues>
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto está licenciado bajo [MIT](LICENSE).
+This project is licensed under [MIT](LICENSE).

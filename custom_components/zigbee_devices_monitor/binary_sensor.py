@@ -320,7 +320,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                     success = True
                     rediscovered_devices.append(device_name)
                     self._async_log_rediscover(
-                        f"Dispositivo redescubierto: {device_name} ({ieee})"
+                        f"Device rediscovered: {device_name} ({ieee})"
                     )
                     break
                 except (
