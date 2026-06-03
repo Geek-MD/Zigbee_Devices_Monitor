@@ -38,6 +38,7 @@ from .const import (
     DEFAULT_REDISCOVER_TRIES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_UNAVAILABLE_TIMEOUT,
+    DOMAIN,
     SERVICE_REDISCOVER_UNAVAILABLE,
     ZIGBEE_INTEGRATION_DOMAINS,
 )
@@ -117,6 +118,8 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         self._cancel_interval: Callable[[], None] | None = None
         self._zha_ieee_by_device: dict[str, t.EUI64] = {}
         self._device_name_by_id: dict[str, str] = {}
+        self._last_rediscovered_devices: list[str] = []
+        self._last_rediscover_message: str | None = None
 
     @property
     def is_on(self) -> bool:
@@ -134,7 +137,21 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             "unavailable_devices": self._unavailable_devices,
             "unavailable_device_ids": self._unavailable_device_ids,
             "unavailable_device_ieee": self._unavailable_device_ieee,
+            "last_rediscovered_devices": self._last_rediscovered_devices,
+            "last_rediscover_message": self._last_rediscover_message,
         }
+
+    def _async_log_rediscover(self, message: str) -> None:
+        """Write rediscover action details to Home Assistant logbook/history."""
+        self._hass.bus.async_fire(
+            "logbook_entry",
+            {
+                "name": self.name,
+                "message": message,
+                "entity_id": self.entity_id,
+                "domain": DOMAIN,
+            },
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register periodic updates."""
@@ -280,6 +297,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
 
         app = gateway.application_controller
         failures: list[str] = []
+        rediscovered_devices: list[str] = []
 
         for device_id in self._unavailable_device_ids:
             ieee = self._zha_ieee_by_device.get(device_id)
@@ -300,6 +318,10 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                     if inspect.isawaitable(result):
                         await result
                     success = True
+                    rediscovered_devices.append(device_name)
+                    self._async_log_rediscover(
+                        f"Device rediscovered: {device_name} ({ieee})"
+                    )
                     break
                 except (
                     ControllerException,
@@ -319,6 +341,15 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
 
             if not success:
                 failures.append(f"{device_name} ({ieee}): failed after {tries} tries")
+
+        self._last_rediscovered_devices = rediscovered_devices
+        if rediscovered_devices:
+            self._last_rediscover_message = ", ".join(rediscovered_devices)
+        elif not failures:
+            self._last_rediscover_message = "No ZHA devices were rediscovered."
+        else:
+            self._last_rediscover_message = None
+        self.async_write_ha_state()
 
         if failures:
             raise ValueError("; ".join(failures))
