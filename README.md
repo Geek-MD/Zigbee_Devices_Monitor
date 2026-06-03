@@ -97,6 +97,14 @@ See [CHANGELOG.md](CHANGELOG.md).
 For issues or feature requests:
 <https://github.com/Geek-MD/Zigbee_Devices_Monitor/issues>
 
-## 📄 License
+## 📜 License
 
-This project is licensed under [MIT](LICENSE).
+MIT License. See [LICENSE](https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/LICENSE) for details.
+
+---
+
+<div align="center">
+  
+💻 **Proudly developed with GitHub Copilot** 🚀
+
+</div>
