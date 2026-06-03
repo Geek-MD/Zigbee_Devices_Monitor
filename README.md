@@ -14,14 +14,14 @@
 
 # Zigbee Devices Monitor
 
-A custom Home Assistant integration that monitors Zigbee devices from ZHA and/or Zigbee2MQTT and exposes a single warning sensor.
+A custom Home Assistant integration that monitors Zigbee devices from ZHA and/or Zigbee2MQTT and exposes a single warning binary sensor.
 
 ## Features
 
-- Creates one sensor that reports overall Zigbee availability status.
-- Sensor states:
-  - `ok`: no Zigbee devices have been offline longer than the configured timeout.
-  - `warning`: one or more Zigbee devices have been offline longer than the configured timeout.
+- Creates one `binary_sensor` (`device_class: problem`) that reports overall Zigbee availability status.
+- Binary sensor states:
+  - `off`: no Zigbee devices have been offline longer than the configured timeout.
+  - `on`: one or more Zigbee devices have been offline longer than the configured timeout.
 - **Automatically detects** which Zigbee integration(s) are installed (ZHA and/or Zigbee2MQTT) — no manual domain configuration required.
 - Monitors at the **device level**: a device is marked offline only when all of its entities report `unavailable` or `unknown` state.
 - Reports offline **device names** (human-readable) instead of raw entity IDs.
@@ -68,7 +68,7 @@ The integration is configured through the UI.
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| Name (`name`) | Name of the warning sensor entity | `Zigbee Devices Warning` |
+| Name (`name`) | Name of the warning binary sensor entity | `Zigbee Devices Warning` |
 | Unavailable timeout (`unavailable_timeout`) | Seconds a device must remain offline before alerting | `300` |
 | Scan interval (`scan_interval`) | Seconds between availability scans | `30` |
 
@@ -80,12 +80,12 @@ The integration is configured through the UI.
 
 ## Sensor details
 
-The integration creates a sensor with the configured name.
+The integration creates a binary sensor with the configured name.
 
 ### State
 
-- `ok`
-- `warning`
+- `off`
+- `on`
 
 ### Attributes
 
@@ -94,6 +94,18 @@ The integration creates a sensor with the configured name.
 - `scan_interval`: periodic check interval.
 - `unavailable_count`: total devices currently in warning condition.
 - `unavailable_devices`: list of offline device names.
+- `unavailable_device_ids`: list of Home Assistant device registry IDs currently offline.
+- `unavailable_device_ieee`: list of unavailable ZHA device IEEE addresses.
+
+## Action: rediscover unavailable devices
+
+The entity action `zigbee_devices_monitor.rediscover_unavailable` re-runs ZHA join handling for unavailable ZHA devices listed by the monitor.
+
+- Devices are always processed **sequentially** (one by one), including when more than one is unavailable.
+- Each device supports configurable retries and delay between retries.
+- Defaults match ZHA Toolkit retry defaults:
+  - `tries`: `3`
+  - `delay`: `0.1` seconds
 
 ## Changelog
 

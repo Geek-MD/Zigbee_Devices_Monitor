@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.0] - 2026-06-03
+
+### Changed
+- Migrated the main entity from a regular sensor to a `binary_sensor` with `device_class: problem`.
+- Binary sensor state is now `off`/`on` (instead of `ok`/`warning`) while preserving the unavailable device attributes.
+- Added `unavailable_device_ids` and `unavailable_device_ieee` attributes to expose rediscovery inputs directly from the monitor entity.
+
+### Added
+- New entity action `zigbee_devices_monitor.rediscover_unavailable` to rediscover unavailable ZHA devices using the monitor attributes as input.
+- Rediscovery retries are configurable per action call with ZHA Toolkit-aligned defaults (`tries: 3`, `delay: 0.1` seconds).
+- When multiple devices are unavailable, rediscovery is executed sequentially (one device at a time).
+
 ## [v0.1.2] - 2026-06-03
 
 ### Changed
