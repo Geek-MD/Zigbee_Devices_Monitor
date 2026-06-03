@@ -10,6 +10,7 @@ import logging
 
 import voluptuous as vol
 import zigpy.types as t
+from zigpy.exceptions import ControllerException, DeliveryError
 
 from homeassistant.components import zha
 from homeassistant.components.binary_sensor import (
@@ -114,7 +115,8 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         self._unavailable_device_ieee: list[str] = []
         self._detected_integrations: list[str] = []
         self._cancel_interval: Callable[[], None] | None = None
-        self._zha_ieee_by_device: dict[str, str] = {}
+        self._zha_ieee_by_device: dict[str, t.EUI64] = {}
+        self._device_name_by_id: dict[str, str] = {}
 
     @property
     def is_on(self) -> bool:
@@ -163,7 +165,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
 
     def _get_zigbee_device_map(
         self,
-    ) -> tuple[dict[str, str], dict[str, list[str]], dict[str, str]]:
+    ) -> tuple[dict[str, str], dict[str, list[str]], dict[str, t.EUI64]]:
         """Return names/entities/ieee maps for all active Zigbee devices."""
         device_reg = dr.async_get(self._hass)
         entity_reg = er.async_get(self._hass)
@@ -178,7 +180,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
 
         device_names: dict[str, str] = {}
         device_entities: dict[str, list[str]] = {}
-        zha_ieee_by_device: dict[str, str] = {}
+        zha_ieee_by_device: dict[str, t.EUI64] = {}
 
         for device in device_reg.devices.values():
             if any(eid in zigbee_entry_ids for eid in device.config_entries):
@@ -187,7 +189,9 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                 device_entities[device.id] = []
                 for identifier_domain, identifier_value in device.identifiers:
                     if identifier_domain == "zha":
-                        zha_ieee_by_device[device.id] = str(identifier_value)
+                        zha_ieee_by_device[device.id] = t.EUI64.convert(
+                            str(identifier_value)
+                        )
 
         for entity in entity_reg.entities.values():
             if entity.disabled_by is not None:
@@ -218,6 +222,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         current_time = self._hass.loop.time()
         self._detected_integrations = self._detect_integrations()
         device_names, device_entities, zha_ieee_by_device = self._get_zigbee_device_map()
+        self._device_name_by_id = device_names
         self._zha_ieee_by_device = zha_ieee_by_device
 
         for device_id, entity_ids in device_entities.items():
@@ -246,7 +251,8 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             device_names.get(did, did) for did in self._unavailable_device_ids
         ]
         self._unavailable_device_ieee = [
-            zha_ieee_by_device[did]
+            # Non-ZHA devices (e.g. Zigbee2MQTT) are intentionally excluded.
+            str(zha_ieee_by_device[did])
             for did in self._unavailable_device_ids
             if did in zha_ieee_by_device
         ]
@@ -255,8 +261,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         """Return the active ZHA gateway object, if available."""
         if zha_helpers is not None and hasattr(zha_helpers, "get_zha_gateway"):
             return zha_helpers.get_zha_gateway(self._hass)
-        if isinstance(zha, dict):
-            return zha.get("zha_gateway")
+        # Fallback for Home Assistant versions where helper access is unavailable.
         return getattr(zha, "gateway", None)
 
     async def async_rediscover_unavailable(self, tries: int, delay: float) -> None:
@@ -268,7 +273,10 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
 
         gateway = self._get_zha_gateway()
         if gateway is None or not hasattr(gateway, "application_controller"):
-            raise ValueError("ZHA gateway is not available")
+            raise ValueError(
+                "ZHA integration is not loaded or gateway is unavailable. "
+                "Ensure ZHA is configured and running."
+            )
 
         app = gateway.application_controller
         failures: list[str] = []
@@ -277,22 +285,28 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             ieee = self._zha_ieee_by_device.get(device_id)
             if ieee is None:
                 continue
+            device_name = self._device_name_by_id.get(device_id, device_id)
 
-            ieee_value = t.EUI64.convert(ieee)
-            device = app.get_device(ieee_value)
+            device = app.get_device(ieee)
             if device is None:
-                failures.append(f"{ieee}: device not found in ZHA")
+                failures.append(f"{device_name} ({ieee}): device not found in ZHA")
                 continue
 
             success = False
             for attempt in range(1, tries + 1):
                 try:
+                    # `None` keeps parent info unset, matching ZHA Toolkit handle_join.
                     result = app.handle_join(int(device.nwk), device.ieee, None)
                     if inspect.isawaitable(result):
                         await result
                     success = True
                     break
-                except Exception as err:  # noqa: BLE001
+                except (
+                    ControllerException,
+                    DeliveryError,
+                    TimeoutError,
+                    ValueError,
+                ) as err:
                     _LOGGER.debug(
                         "handle_join failed for %s (attempt %s/%s): %s",
                         ieee,
@@ -304,7 +318,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                         await asyncio.sleep(delay)
 
             if not success:
-                failures.append(f"{ieee}: failed after {tries} tries")
+                failures.append(f"{device_name} ({ieee}): failed after {tries} tries")
 
         if failures:
             raise ValueError("; ".join(failures))

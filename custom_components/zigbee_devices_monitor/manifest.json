@@ -1,6 +1,9 @@
 {
   "domain": "zigbee_devices_monitor",
   "name": "Zigbee Devices Monitor",
+  "after_dependencies": [
+    "zha"
+  ],
   "codeowners": [
     "@Geek-MD"
   ],
