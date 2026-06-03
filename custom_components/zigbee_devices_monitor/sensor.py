@@ -185,7 +185,7 @@ class ZigbeeWarningSensor(SensorEntity):
         }
 
         self._unavailable_devices = sorted(
-            device_names[did]
+            device_names.get(did, did)
             for did, since in self._unavailable_since.items()
             if (current_time - since) >= self._timeout.total_seconds()
         )
