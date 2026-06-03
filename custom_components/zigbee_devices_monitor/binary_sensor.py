@@ -1,27 +1,52 @@
-"""Sensor platform for Zigbee Devices Monitor."""
+"""Binary sensor platform for Zigbee Devices Monitor."""
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
+import inspect
+import logging
 
-from homeassistant.components.sensor import SensorEntity
+import voluptuous as vol
+import zigpy.types as t
+
+from homeassistant.components import zha
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_REDISCOVER_DELAY,
+    CONF_REDISCOVER_TRIES,
     CONF_SCAN_INTERVAL,
     CONF_UNAVAILABLE_TIMEOUT,
     DEFAULT_NAME,
+    DEFAULT_REDISCOVER_DELAY,
+    DEFAULT_REDISCOVER_TRIES,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_UNAVAILABLE_TIMEOUT,
+    SERVICE_REDISCOVER_UNAVAILABLE,
     ZIGBEE_INTEGRATION_DOMAINS,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+try:
+    from homeassistant.components.zha import helpers as zha_helpers
+except ImportError:  # pragma: no cover
+    zha_helpers = None
 
 
 async def async_setup_entry(
@@ -29,12 +54,12 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Zigbee warning sensor from a config entry."""
+    """Set up Zigbee warning binary sensor from a config entry."""
     # Options are user-edited values and must override initial entry data.
     values = {**config_entry.data, **config_entry.options}
     async_add_entities(
         [
-            ZigbeeWarningSensor(
+            ZigbeeWarningBinarySensor(
                 hass=hass,
                 name=str(values.get(CONF_NAME, DEFAULT_NAME)),
                 unavailable_timeout=int(
@@ -46,12 +71,29 @@ async def async_setup_entry(
         True,
     )
 
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_REDISCOVER_UNAVAILABLE,
+        {
+            vol.Optional(
+                CONF_REDISCOVER_TRIES,
+                default=DEFAULT_REDISCOVER_TRIES,
+            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Optional(
+                CONF_REDISCOVER_DELAY,
+                default=DEFAULT_REDISCOVER_DELAY,
+            ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        },
+        "async_rediscover_unavailable",
+    )
 
-class ZigbeeWarningSensor(SensorEntity):
+
+class ZigbeeWarningBinarySensor(BinarySensorEntity):
     """Monitor Zigbee devices and report unavailability warnings."""
 
     _attr_icon = "mdi:alert"
     _attr_should_poll = False
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(
         self,
@@ -67,14 +109,17 @@ class ZigbeeWarningSensor(SensorEntity):
         self._timeout_seconds = unavailable_timeout
         self._scan_interval = scan_interval
         self._unavailable_since: dict[str, float] = {}
+        self._unavailable_device_ids: list[str] = []
         self._unavailable_devices: list[str] = []
+        self._unavailable_device_ieee: list[str] = []
         self._detected_integrations: list[str] = []
         self._cancel_interval: Callable[[], None] | None = None
+        self._zha_ieee_by_device: dict[str, str] = {}
 
     @property
-    def native_value(self) -> str:
+    def is_on(self) -> bool:
         """Return warning status."""
-        return "warning" if self._unavailable_devices else "ok"
+        return bool(self._unavailable_devices)
 
     @property
     def extra_state_attributes(self) -> dict[str, object]:
@@ -85,6 +130,8 @@ class ZigbeeWarningSensor(SensorEntity):
             "scan_interval": self._scan_interval,
             "unavailable_count": len(self._unavailable_devices),
             "unavailable_devices": self._unavailable_devices,
+            "unavailable_device_ids": self._unavailable_device_ids,
+            "unavailable_device_ieee": self._unavailable_device_ieee,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -116,12 +163,8 @@ class ZigbeeWarningSensor(SensorEntity):
 
     def _get_zigbee_device_map(
         self,
-    ) -> tuple[dict[str, str], dict[str, list[str]]]:
-        """Return (device_names, device_entities) for all active Zigbee devices.
-
-        device_names  – device_id → human-readable name
-        device_entities – device_id → list of non-disabled entity_ids
-        """
+    ) -> tuple[dict[str, str], dict[str, list[str]], dict[str, str]]:
+        """Return names/entities/ieee maps for all active Zigbee devices."""
         device_reg = dr.async_get(self._hass)
         entity_reg = er.async_get(self._hass)
 
@@ -131,16 +174,20 @@ class ZigbeeWarningSensor(SensorEntity):
                 zigbee_entry_ids.add(entry.entry_id)
 
         if not zigbee_entry_ids:
-            return {}, {}
+            return {}, {}, {}
 
         device_names: dict[str, str] = {}
         device_entities: dict[str, list[str]] = {}
+        zha_ieee_by_device: dict[str, str] = {}
 
         for device in device_reg.devices.values():
             if any(eid in zigbee_entry_ids for eid in device.config_entries):
                 name = device.name_by_user or device.name or str(device.id)
                 device_names[device.id] = name
                 device_entities[device.id] = []
+                for identifier_domain, identifier_value in device.identifiers:
+                    if identifier_domain == "zha":
+                        zha_ieee_by_device[device.id] = str(identifier_value)
 
         for entity in entity_reg.entities.values():
             if entity.disabled_by is not None:
@@ -153,6 +200,7 @@ class ZigbeeWarningSensor(SensorEntity):
         return (
             {did: name for did, name in device_names.items() if did in valid},
             {did: ents for did, ents in device_entities.items() if did in valid},
+            {did: ieee for did, ieee in zha_ieee_by_device.items() if did in valid},
         )
 
     def _is_device_offline(self, entity_ids: list[str]) -> bool:
@@ -169,7 +217,8 @@ class ZigbeeWarningSensor(SensorEntity):
         """Update offline devices list based on timeout."""
         current_time = self._hass.loop.time()
         self._detected_integrations = self._detect_integrations()
-        device_names, device_entities = self._get_zigbee_device_map()
+        device_names, device_entities, zha_ieee_by_device = self._get_zigbee_device_map()
+        self._zha_ieee_by_device = zha_ieee_by_device
 
         for device_id, entity_ids in device_entities.items():
             if self._is_device_offline(entity_ids):
@@ -184,8 +233,78 @@ class ZigbeeWarningSensor(SensorEntity):
             if did in device_entities
         }
 
-        self._unavailable_devices = sorted(
-            device_names.get(did, did)
+        unavailable_device_ids = [
+            did
             for did, since in self._unavailable_since.items()
             if (current_time - since) >= self._timeout.total_seconds()
+        ]
+        self._unavailable_device_ids = sorted(
+            unavailable_device_ids,
+            key=lambda did: device_names.get(did, did),
         )
+        self._unavailable_devices = [
+            device_names.get(did, did) for did in self._unavailable_device_ids
+        ]
+        self._unavailable_device_ieee = [
+            zha_ieee_by_device[did]
+            for did in self._unavailable_device_ids
+            if did in zha_ieee_by_device
+        ]
+
+    def _get_zha_gateway(self) -> object | None:
+        """Return the active ZHA gateway object, if available."""
+        if zha_helpers is not None and hasattr(zha_helpers, "get_zha_gateway"):
+            return zha_helpers.get_zha_gateway(self._hass)
+        if isinstance(zha, dict):
+            return zha.get("zha_gateway")
+        return getattr(zha, "gateway", None)
+
+    async def async_rediscover_unavailable(self, tries: int, delay: float) -> None:
+        """Rediscover unavailable ZHA devices sequentially using handle_join."""
+        self._process_states()
+
+        if not self._unavailable_device_ids:
+            return
+
+        gateway = self._get_zha_gateway()
+        if gateway is None or not hasattr(gateway, "application_controller"):
+            raise ValueError("ZHA gateway is not available")
+
+        app = gateway.application_controller
+        failures: list[str] = []
+
+        for device_id in self._unavailable_device_ids:
+            ieee = self._zha_ieee_by_device.get(device_id)
+            if ieee is None:
+                continue
+
+            ieee_value = t.EUI64.convert(ieee)
+            device = app.get_device(ieee_value)
+            if device is None:
+                failures.append(f"{ieee}: device not found in ZHA")
+                continue
+
+            success = False
+            for attempt in range(1, tries + 1):
+                try:
+                    result = app.handle_join(int(device.nwk), device.ieee, None)
+                    if inspect.isawaitable(result):
+                        await result
+                    success = True
+                    break
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.debug(
+                        "handle_join failed for %s (attempt %s/%s): %s",
+                        ieee,
+                        attempt,
+                        tries,
+                        err,
+                    )
+                    if attempt < tries:
+                        await asyncio.sleep(delay)
+
+            if not success:
+                failures.append(f"{ieee}: failed after {tries} tries")
+
+        if failures:
+            raise ValueError("; ".join(failures))
