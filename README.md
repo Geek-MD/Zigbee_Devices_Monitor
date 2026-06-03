@@ -3,9 +3,7 @@
 [![HACS Custom Repository](https://img.shields.io/badge/HACS-Custom%20Repository-blue)](https://hacs.xyz/)
 [![Ruff + Mypy + Hassfest](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml/badge.svg)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml)
 
-<p align="center">
-  <img src="https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/custom_components/zigbee_devices_monitor/brand/icon.png?raw=true" width="180" alt="Zigbee Devices Monitor icon" />
-</p>
+<img src="https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/custom_components/zigbee_devices_monitor/brand/icon.png?raw=true" width="180" alt="Zigbee Devices Monitor icon" />
 
 # Zigbee Devices Monitor
 
