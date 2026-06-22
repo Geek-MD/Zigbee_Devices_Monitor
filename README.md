@@ -88,6 +88,45 @@ The entity action `zigbee_devices_monitor.rediscover_unavailable`:
 - Records each successful rediscovery in Home Assistant history/logbook.
 - Updates entity attributes to improve visibility in automation traces.
 
+## 🤖 Automation examples
+
+### 1) Notify when unavailable devices are detected
+
+```yaml
+alias: Zigbee warning notification
+description: Send a mobile notification when the warning sensor turns on.
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.zigbee_devices_warning
+    to: "on"
+actions:
+  - action: notify.mobile_app_your_phone
+    data:
+      title: Zigbee Devices Monitor
+      message: >
+        {{ state_attr('binary_sensor.zigbee_devices_warning', 'unavailable_count') }}
+        device(s) unavailable:
+        {{ state_attr('binary_sensor.zigbee_devices_warning', 'unavailable_devices') }}
+mode: single
+```
+
+### 2) Auto-run rediscovery when warning turns on
+
+```yaml
+alias: Zigbee auto rediscover
+description: Run rediscovery with retries when unavailable devices are detected.
+triggers:
+  - trigger: state
+    entity_id: binary_sensor.zigbee_devices_warning
+    to: "on"
+actions:
+  - action: zigbee_devices_monitor.rediscover_unavailable
+    data:
+      tries: 3
+      delay: 0.2
+mode: single
+```
+
 ## 🗂️ Changelog
 
 See [CHANGELOG.md](CHANGELOG.md).
