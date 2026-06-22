@@ -29,6 +29,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_EXCLUDED_DEVICES,
     CONF_REDISCOVER_DELAY,
     CONF_REDISCOVER_TRIES,
     CONF_SCAN_INTERVAL,
@@ -68,6 +69,7 @@ async def async_setup_entry(
                     values.get(CONF_UNAVAILABLE_TIMEOUT, DEFAULT_UNAVAILABLE_TIMEOUT)
                 ),
                 scan_interval=int(values.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
+                excluded_device_ids=list(values.get(CONF_EXCLUDED_DEVICES, [])),
             )
         ],
         True,
@@ -103,6 +105,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         name: str,
         unavailable_timeout: int,
         scan_interval: int,
+        excluded_device_ids: list[str] | None = None,
     ) -> None:
         self._hass = hass
         self._attr_name = name
@@ -110,6 +113,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         self._timeout = timedelta(seconds=unavailable_timeout)
         self._timeout_seconds = unavailable_timeout
         self._scan_interval = scan_interval
+        self._excluded_device_ids: list[str] = excluded_device_ids or []
         self._unavailable_since: dict[str, float] = {}
         self._unavailable_device_ids: list[str] = []
         self._unavailable_devices: list[str] = []
@@ -133,6 +137,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             "detected_integrations": self._detected_integrations,
             "timeout_seconds": self._timeout_seconds,
             "scan_interval": self._scan_interval,
+            "excluded_device_ids": self._excluded_device_ids,
             "unavailable_count": len(self._unavailable_devices),
             "unavailable_devices": self._unavailable_devices,
             "unavailable_device_ids": self._unavailable_device_ids,
@@ -243,6 +248,9 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         self._zha_ieee_by_device = zha_ieee_by_device
 
         for device_id, entity_ids in device_entities.items():
+            if device_id in self._excluded_device_ids:
+                self._unavailable_since.pop(device_id, None)
+                continue
             if self._is_device_offline(entity_ids):
                 self._unavailable_since.setdefault(device_id, current_time)
             else:

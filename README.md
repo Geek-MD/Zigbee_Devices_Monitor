@@ -58,6 +58,7 @@ Configuration is fully UI-based.
 | `name` | Warning entity name | `Zigbee Devices Warning` |
 | `unavailable_timeout` | Seconds a device must be offline before alerting | `300` |
 | `scan_interval` | Seconds between scans | `30` |
+| `excluded_devices` | Devices to exclude from monitoring | *(none)* |
 
 To reconfigure later: **Settings → Devices & Services → Zigbee Devices Monitor → Configure**.
 
@@ -70,6 +71,7 @@ The integration creates one `binary_sensor` with:
   - `detected_integrations`
   - `timeout_seconds`
   - `scan_interval`
+  - `excluded_device_ids`
   - `unavailable_count`
   - `unavailable_devices`
   - `unavailable_device_ids`
@@ -81,10 +83,12 @@ The integration creates one `binary_sensor` with:
 
 The entity action `zigbee_devices_monitor.rediscover_unavailable`:
 
+- Must be called with the monitor entity as target (`binary_sensor.zigbee_devices_warning`, or your custom name).
 - Processes unavailable devices sequentially.
 - Supports:
   - `tries` (default: `3`)
   - `delay` (default: `0.1`)
+- Recalculates unavailable devices internally at execution time (attributes are informative; they are not passed as manual input).
 - Records each successful rediscovery in Home Assistant history/logbook.
 - Updates entity attributes to improve visibility in automation traces.
 
@@ -121,6 +125,8 @@ triggers:
     to: "on"
 actions:
   - action: zigbee_devices_monitor.rediscover_unavailable
+    target:
+      entity_id: binary_sensor.zigbee_devices_warning
     data:
       tries: 3
       delay: 0.2

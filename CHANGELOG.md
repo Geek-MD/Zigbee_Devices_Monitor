@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.2.2] - 2026-06-22
+
+### Added
+- New `excluded_devices` option in both the initial configuration and the reconfiguration (options flow) that allows selecting one or more Zigbee devices to exclude from monitoring.
+- Excluded device IDs are exposed as an `excluded_device_ids` attribute on the binary sensor.
+
+### Fixed
+- 500 Internal Server Error ("Server got itself in trouble") that occurred when opening the reconfiguration (options) flow. The root cause was passing `config_entry` to the `OptionsFlow` constructor, which is no longer accepted in recent Home Assistant versions.
+
 ## [v0.2.1] - 2026-06-03
 
 ### Changed
