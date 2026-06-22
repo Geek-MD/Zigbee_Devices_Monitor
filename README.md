@@ -83,10 +83,12 @@ The integration creates one `binary_sensor` with:
 
 The entity action `zigbee_devices_monitor.rediscover_unavailable`:
 
+- Must be called with the monitor entity as target (`binary_sensor.zigbee_devices_warning`, or your custom name).
 - Processes unavailable devices sequentially.
 - Supports:
   - `tries` (default: `3`)
   - `delay` (default: `0.1`)
+- Recalculates unavailable devices internally at execution time (attributes are informative; they are not passed as manual input).
 - Records each successful rediscovery in Home Assistant history/logbook.
 - Updates entity attributes to improve visibility in automation traces.
 
@@ -123,6 +125,8 @@ triggers:
     to: "on"
 actions:
   - action: zigbee_devices_monitor.rediscover_unavailable
+    target:
+      entity_id: binary_sensor.zigbee_devices_warning
     data:
       tries: 3
       delay: 0.2
