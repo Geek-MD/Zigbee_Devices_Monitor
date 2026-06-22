@@ -7,7 +7,8 @@
         "data": {
           "name": "Sensor name",
           "unavailable_timeout": "Unavailable timeout (seconds)",
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "excluded_devices": "Excluded devices (not monitored)"
         }
       }
     },
@@ -23,7 +24,8 @@
         "data": {
           "name": "Sensor name",
           "unavailable_timeout": "Unavailable timeout (seconds)",
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "excluded_devices": "Excluded devices (not monitored)"
         }
       }
     }

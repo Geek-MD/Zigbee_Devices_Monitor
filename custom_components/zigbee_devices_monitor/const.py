@@ -12,6 +12,7 @@ DEFAULT_REDISCOVER_DELAY = 0.1
 
 CONF_UNAVAILABLE_TIMEOUT = "unavailable_timeout"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_EXCLUDED_DEVICES = "excluded_devices"
 CONF_REDISCOVER_TRIES = "tries"
 CONF_REDISCOVER_DELAY = "delay"
 

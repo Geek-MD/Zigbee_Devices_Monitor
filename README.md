@@ -58,6 +58,7 @@ Configuration is fully UI-based.
 | `name` | Warning entity name | `Zigbee Devices Warning` |
 | `unavailable_timeout` | Seconds a device must be offline before alerting | `300` |
 | `scan_interval` | Seconds between scans | `30` |
+| `excluded_devices` | Devices to exclude from monitoring | *(none)* |
 
 To reconfigure later: **Settings → Devices & Services → Zigbee Devices Monitor → Configure**.
 
@@ -70,6 +71,7 @@ The integration creates one `binary_sensor` with:
   - `detected_integrations`
   - `timeout_seconds`
   - `scan_interval`
+  - `excluded_device_ids`
   - `unavailable_count`
   - `unavailable_devices`
   - `unavailable_device_ids`
