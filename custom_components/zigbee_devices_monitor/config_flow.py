@@ -40,7 +40,7 @@ def _get_zigbee_device_options(
         if entry.domain in ZIGBEE_INTEGRATION_DOMAINS
     }
     options: list[selector.SelectOptionDict] = []
-    for device in device_reg.devices.values():
+    for device in device_reg.devices:
         if any(eid in entry_ids for eid in device.config_entries):
             name = device.name_by_user or device.name or str(device.id)
             options.append(selector.SelectOptionDict(value=device.id, label=name))
