@@ -68,7 +68,9 @@ async def async_setup_entry(
                 unavailable_timeout=int(
                     values.get(CONF_UNAVAILABLE_TIMEOUT, DEFAULT_UNAVAILABLE_TIMEOUT)
                 ),
-                scan_interval=int(values.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)),
+                scan_interval=int(
+                    values.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+                ),
                 excluded_device_ids=list(values.get(CONF_EXCLUDED_DEVICES, [])),
             )
         ],
@@ -181,7 +183,10 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         """Return sorted list of detected Zigbee integration domains."""
         detected: list[str] = []
         for entry in self._hass.config_entries.async_entries():
-            if entry.domain in ZIGBEE_INTEGRATION_DOMAINS and entry.domain not in detected:
+            if (
+                entry.domain in ZIGBEE_INTEGRATION_DOMAINS
+                and entry.domain not in detected
+            ):
                 detected.append(entry.domain)
         return sorted(detected)
 
@@ -204,7 +209,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         device_entities: dict[str, list[str]] = {}
         zha_ieee_by_device: dict[str, t.EUI64] = {}
 
-        for device in device_reg.devices.values():
+        for device in device_reg.devices:
             if any(eid in zigbee_entry_ids for eid in device.config_entries):
                 name = device.name_by_user or device.name or str(device.id)
                 device_names[device.id] = name
@@ -215,7 +220,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                             str(identifier_value)
                         )
 
-        for entity in entity_reg.entities.values():
+        for entity in entity_reg.entities:
             if entity.disabled_by is not None:
                 continue
             if entity.device_id in device_entities:
@@ -243,7 +248,9 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         """Update offline devices list based on timeout."""
         current_time = self._hass.loop.time()
         self._detected_integrations = self._detect_integrations()
-        device_names, device_entities, zha_ieee_by_device = self._get_zigbee_device_map()
+        device_names, device_entities, zha_ieee_by_device = (
+            self._get_zigbee_device_map()
+        )
         self._device_name_by_id = device_names
         self._zha_ieee_by_device = zha_ieee_by_device
 
