@@ -24,13 +24,17 @@ A Home Assistant custom integration that monitors Zigbee device availability and
 - Exposes attributes with unavailable device details and rediscovery inputs.
 - Provides the `zigbee_devices_monitor.rediscover_unavailable` action for unavailable ZHA devices.
 - Writes one history/logbook entry per successfully rediscovered device.
+- Uses [Probatio](https://probatio.frenck.dev/) directly for configuration and entity action validation.
 
 ## 📋 Requirements
 
 | Requirement | Minimum version |
 |-------------|-----------------|
-| Home Assistant | 2024.1.0 |
+| Home Assistant | 2026.9.0 |
 | HACS (optional) | 1.6.0 |
+
+Home Assistant 2026.9 or newer is required because this release imports the
+Probatio validation engine directly instead of using the legacy Voluptuous API.
 
 ## 📦 Installation
 
