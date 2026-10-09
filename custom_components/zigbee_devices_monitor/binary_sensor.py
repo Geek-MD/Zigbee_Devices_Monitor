@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import inspect
 import logging
 
-import voluptuous as vol
+import probatio
 import zigpy.types as t
 from zigpy.exceptions import ControllerException, DeliveryError
 
@@ -81,14 +81,14 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_REDISCOVER_UNAVAILABLE,
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_REDISCOVER_TRIES,
                 default=DEFAULT_REDISCOVER_TRIES,
-            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
+            probatio.Optional(
                 CONF_REDISCOVER_DELAY,
                 default=DEFAULT_REDISCOVER_DELAY,
-            ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+            ): probatio.All(probatio.Coerce(float), probatio.Range(min=0)),
         },
         "async_rediscover_unavailable",
     )

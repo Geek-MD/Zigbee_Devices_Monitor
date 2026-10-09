@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -50,21 +50,21 @@ def _get_zigbee_device_options(
 def _build_schema(
     hass: HomeAssistant,
     defaults: dict[str, Any],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Build config schema."""
     device_options = _get_zigbee_device_options(hass)
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
-            vol.Required(
+            probatio.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
+            probatio.Required(
                 CONF_UNAVAILABLE_TIMEOUT,
                 default=defaults[CONF_UNAVAILABLE_TIMEOUT],
-            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Required(
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
+            probatio.Required(
                 CONF_SCAN_INTERVAL,
                 default=defaults[CONF_SCAN_INTERVAL],
-            ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional(
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1)),
+            probatio.Optional(
                 CONF_EXCLUDED_DEVICES,
                 default=defaults.get(CONF_EXCLUDED_DEVICES, []),
             ): selector.SelectSelector(
