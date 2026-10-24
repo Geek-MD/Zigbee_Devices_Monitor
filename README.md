@@ -16,6 +16,12 @@
 
 A Home Assistant custom integration that monitors Zigbee device availability and exposes a single warning `binary_sensor`.
 
+## v0.3.1 update
+
+Fixes periodic availability scans failing with `AttributeError: 'str' object has no attribute 'disabled_by'`. Update the integration through HACS or replace the integration folder manually, then restart Home Assistant. Existing configuration is preserved.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+
 ## ✨ Features
 
 - Automatically detects installed Zigbee integrations (`zha` and/or `zigbee2mqtt`).
