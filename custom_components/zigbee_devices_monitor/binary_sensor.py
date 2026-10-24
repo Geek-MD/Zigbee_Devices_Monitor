@@ -220,7 +220,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                             str(identifier_value)
                         )
 
-        for entity in entity_reg.entities:
+        for entity in entity_reg.entities.values():
             if entity.disabled_by is not None:
                 continue
             if entity.device_id in device_entities:
