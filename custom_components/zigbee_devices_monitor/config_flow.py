@@ -41,7 +41,7 @@ def _get_zigbee_device_options(
     }
     options: list[selector.SelectOptionDict] = []
     for device in device_reg.devices:
-        if any(eid in entry_ids for eid in device.config_entries):
+        if device.config_entry_id in entry_ids:
             name = device.name_by_user or device.name or str(device.id)
             options.append(selector.SelectOptionDict(value=device.id, label=name))
     return sorted(options, key=lambda x: x["label"])

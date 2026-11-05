@@ -16,9 +16,9 @@
 
 A Home Assistant custom integration that monitors Zigbee device availability and exposes a single warning `binary_sensor`.
 
-## v0.3.1 update
+## v0.4.0 update
 
-Fixes periodic availability scans failing with `AttributeError: 'str' object has no attribute 'disabled_by'`. Update the integration through HACS or replace the integration folder manually, then restart Home Assistant. Existing configuration is preserved.
+Adds activity-aware recovery for unavailable ZHA devices. The integration can now detect when a previously unavailable device communicates again, emit an automation event, perform a full ZHA re-interview, rebuild its entities, and verify recovery. Existing configuration is preserved.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
@@ -27,9 +27,11 @@ See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 - Automatically detects installed Zigbee integrations (`zha` and/or `zigbee2mqtt`).
 - Monitors availability at the **device level** (not per-entity).
 - Creates one `binary_sensor` with `device_class: problem` (`off` / `on`).
-- Exposes attributes with unavailable device details and rediscovery inputs.
-- Provides the `zigbee_devices_monitor.rediscover_unavailable` action for unavailable ZHA devices.
-- Writes one history/logbook entry per successfully rediscovered device.
+- Detects new ZHA activity through device `last_seen` updates and emits one event per unavailability episode.
+- Provides targeted and bulk ZHA re-interview actions with recovery verification.
+- Rebuilds endpoints, clusters, quirks, bindings, reporting, and entities through ZHA's native re-interview flow.
+- Processes devices sequentially with a configurable pause between devices.
+- Writes one history/logbook entry per successfully recovered device.
 - Uses [Probatio](https://probatio.frenck.dev/) directly for configuration and entity action validation.
 
 ## 📋 Requirements
@@ -89,18 +91,57 @@ The integration creates one `binary_sensor` with:
   - `last_rediscovered_devices`
   - `last_rediscover_message`
 
-## 🔄 Action: `rediscover_unavailable`
+## 🔄 Recovery actions
+
+### `rediscover_unavailable`
 
 The entity action `zigbee_devices_monitor.rediscover_unavailable`:
 
 - Must be called with the monitor entity as target (`binary_sensor.zigbee_devices_warning`, or your custom name).
-- Processes unavailable devices sequentially.
+- Fully re-interviews unavailable ZHA devices sequentially.
 - Supports:
   - `tries` (default: `3`)
-  - `delay` (default: `0.1`)
+  - `delay` between attempts for the same device (default: `0.1` seconds)
+  - `recovery_timeout` for the re-interview and entity verification (default: `60` seconds)
+  - `device_delay` between different devices (default: `5` seconds)
 - Recalculates unavailable devices internally at execution time (attributes are informative; they are not passed as manual input).
-- Records each successful rediscovery in Home Assistant history/logbook.
+- Considers a device recovered only after at least one enabled entity is no longer `unavailable` or `unknown`.
+- Records each successful recovery in Home Assistant history/logbook.
 - Updates entity attributes to improve visibility in automation traces.
+
+### `reinterview_device`
+
+The targeted entity action `zigbee_devices_monitor.reinterview_device`:
+
+- Must be called with the monitor entity as target.
+- Requires a ZHA `device_id`.
+- Can process the device even if recent activity already removed it from the unavailable list.
+- Supports `tries`, `delay`, and `recovery_timeout` with the same defaults as the bulk action.
+- Emits a recovery result event after verification.
+
+## 📡 Events
+
+### `zigbee_devices_monitor_device_activity`
+
+Fires once per unavailability episode when the monitor sees a newer ZHA `last_seen` timestamp for a device that was already reported as unavailable.
+
+Event data:
+
+| Field | Description |
+|-------|-------------|
+| `device_id` | Home Assistant device registry ID |
+| `device_name` | Human-readable device name |
+| `ieee` | ZHA IEEE address |
+| `entity_ids` | Enabled entities associated with the device |
+| `last_seen` | Timestamp of the newly detected activity |
+| `unavailable_since` | Timestamp when the offline episode started |
+
+### Recovery result events
+
+- `zigbee_devices_monitor_device_recovered` fires after a successful re-interview and entity recovery. It includes `attempt`.
+- `zigbee_devices_monitor_device_recovery_failed` fires after all attempts fail. It includes `attempts` and `reason`.
+
+Activity detection does not make an unreachable device respond. Battery-powered devices must wake and communicate naturally before the activity event can fire.
 
 ## 🤖 Automation examples
 
@@ -140,8 +181,33 @@ actions:
     data:
       tries: 3
       delay: 0.2
+      recovery_timeout: 60
+      device_delay: 5
 mode: single
 ```
+
+### 3) Re-interview a battery device when it wakes
+
+```yaml
+alias: Zigbee recover device on activity
+description: Re-interview an unavailable ZHA device as soon as it communicates again.
+triggers:
+  - trigger: event
+    event_type: zigbee_devices_monitor_device_activity
+actions:
+  - action: zigbee_devices_monitor.reinterview_device
+    target:
+      entity_id: binary_sensor.zigbee_devices_warning
+    data:
+      device_id: "{{ trigger.event.data.device_id }}"
+      tries: 2
+      delay: 1
+      recovery_timeout: 60
+mode: queued
+max: 10
+```
+
+Using `queued` mode prevents simultaneous re-interviews when several devices report activity close together.
 
 ## 🗂️ Changelog
 
