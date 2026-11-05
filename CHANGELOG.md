@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.4.0] - 2026-11-05
+
+### Added
+- Added the `zigbee_devices_monitor_device_activity` event. It fires once per unavailability episode when ZHA reports a newer `last_seen` value for the device, exposing its device ID, name, IEEE address, entity IDs, last-seen time, and unavailability start time.
+- Added the targeted `zigbee_devices_monitor.reinterview_device` entity action so automations can re-interview the exact device reported by the activity event, even if it has already left the unavailable list.
+- Added `zigbee_devices_monitor_device_recovered` and `zigbee_devices_monitor_device_recovery_failed` result events.
+- Added configurable recovery verification timeouts and a separate delay between devices when processing multiple unavailable devices.
+
+### Changed
+- Replaced the former synthetic zigpy `handle_join` call with ZHA's full `async_reinterview_device` flow. Successful recovery now requires at least one enabled entity to return to a state other than `unavailable` or `unknown`.
+- `rediscover_unavailable` now performs sequential full re-interviews, verifies recovery, and pauses for five seconds between devices by default.
+
+### Fixed
+- Replaced deprecated `DeviceEntry.config_entries` access with the singular `DeviceEntry.config_entry_id` required by current Home Assistant releases.
+
 ## [v0.3.1] - 2026-10-24
 
 ### Fixed
