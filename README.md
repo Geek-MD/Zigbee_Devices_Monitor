@@ -16,9 +16,9 @@
 
 A Home Assistant custom integration that monitors Zigbee device availability and exposes a single warning `binary_sensor`.
 
-## v0.4.0 update
+## v0.4.1 update
 
-Adds activity-aware recovery for unavailable ZHA devices. The integration can now detect when a previously unavailable device communicates again, emit an automation event, perform a full ZHA re-interview, rebuild its entities, and verify recovery. Existing configuration is preserved.
+Adds the Home Assistant 2026.11 Marketplace wireless-protocol classification. It includes the activity-aware recovery introduced in v0.4.0: the integration can detect when a previously unavailable ZHA device communicates again, emit an automation event, perform a full ZHA re-interview, rebuild its entities, and verify recovery. Existing configuration is preserved.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
