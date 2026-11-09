@@ -6,6 +6,10 @@
 [![License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/blob/main/LICENSE)
 [![HACS Custom Repository](https://img.shields.io/badge/HACS-Custom%20Repository-blue)](https://hacs.xyz/)
 
+<!-- ha-marketplace:exclude-start -->
+[![Open your Home Assistant instance and open Zigbee Devices Monitor in the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=Geek-MD&repository=Zigbee_Devices_Monitor&category=integration)
+<!-- ha-marketplace:exclude-end -->
+
 [![Ruff + Mypy + Hassfest](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml/badge.svg)](https://github.com/Geek-MD/Zigbee_Devices_Monitor/actions/workflows/ci.yaml)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
@@ -16,9 +20,9 @@
 
 A Home Assistant custom integration that monitors Zigbee device availability and exposes a single warning `binary_sensor`.
 
-## v0.4.0 update
+## v0.4.1 update
 
-Adds activity-aware recovery for unavailable ZHA devices. The integration can now detect when a previously unavailable device communicates again, emit an automation event, perform a full ZHA re-interview, rebuild its entities, and verify recovery. Existing configuration is preserved.
+Adds the Home Assistant 2026.11 Marketplace wireless-protocol classification. It includes the activity-aware recovery introduced in v0.4.0: the integration can detect when a previously unavailable ZHA device communicates again, emit an automation event, perform a full ZHA re-interview, rebuild its entities, and verify recovery. Existing configuration is preserved.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
@@ -44,9 +48,15 @@ See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 Home Assistant 2026.9 or newer is required because this release imports the
 Probatio validation engine directly instead of using the legacy Voluptuous API.
 
-## 📦 Installation
+## 🛠 Installation
 
-### Option 1: HACS (recommended)
+### Option 1: Marketplace (Home Assistant 2026.11 or newer)
+
+1. Go to **Settings → Marketplace**.
+2. Search for **Zigbee Devices Monitor**, select **Install**, and confirm the version.
+3. Complete setup when Home Assistant opens the integration page.
+
+### Option 2: HACS (Home Assistant 2026.9–2026.10 only)
 
 1. Open **HACS → Integrations**.
 2. Open the three-dot menu → **Custom repositories**.
@@ -54,7 +64,7 @@ Probatio validation engine directly instead of using the legacy Voluptuous API.
 4. Search for **Zigbee Devices Monitor** and install.
 5. Restart Home Assistant.
 
-### Option 2: Manual
+### Option 3: Manual installation
 
 1. Copy `custom_components/zigbee_devices_monitor` to `<config>/custom_components/`.
 2. Restart Home Assistant.
