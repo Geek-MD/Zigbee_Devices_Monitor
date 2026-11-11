@@ -22,7 +22,7 @@ A Home Assistant custom integration that monitors Zigbee device availability and
 
 ## v0.4.2 update
 
-Fixes recovery actions aborting automations with an unexpected `ValueError` when a device remains unavailable after all re-interview attempts. Both recovery actions now log a warning and expose failure details in `last_rediscover_failures`. Devices remain marked unavailable until their entities actually recover. Existing configuration is preserved.
+Fixes recovery actions aborting automations with an unexpected `ValueError` when a device remains unavailable after all re-interview attempts. Both recovery actions now log a warning, create a persistent notification for each device that exhausts its attempts, and expose failure details in `last_rediscover_failures`. Devices remain marked unavailable until their entities actually recover. Existing configuration is preserved.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
@@ -135,6 +135,8 @@ The targeted entity action `zigbee_devices_monitor.reinterview_device`:
 If a device remains unavailable after all attempts, either recovery action records a warning and stores the failure description in `last_rediscover_failures` without raising an exception for that recovery result. Automations can continue and inspect this attribute or listen for `zigbee_devices_monitor_device_recovery_failed`. A completed action does not mean every device recovered: only devices with at least one available entity appear in `last_rediscovered_devices`.
 
 The bulk action refreshes availability after processing devices and clears previous recovery results even when there are no unavailable ZHA devices to process. Other errors, such as an unavailable ZHA gateway, can still fail the action.
+
+Each device that exhausts its configured attempts (default: **3 total attempts**) also gets a persistent Home Assistant notification with its name, IEEE address, attempt count, and failure reason. Further failures for the same device update its existing notification instead of creating duplicates. A later successful recovery action for that device dismisses its notification; you can also dismiss it manually. Periodic availability scans alone do not dismiss it.
 
 An unreachable device must regain power or Zigbee connectivity before it can respond to a re-interview.
 

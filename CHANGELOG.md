@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refresh availability after bulk recovery and clear stale results when there are no unavailable ZHA devices to process.
 
 ### Added
+- Added a persistent notification per ZHA device when all configured recovery attempts are exhausted (three total attempts by default). Repeated failures update the same notification; a later successful recovery action dismisses it.
 - Added the `last_rediscover_failures` sensor attribute to expose failure descriptions from the latest recovery action alongside successfully recovered devices.
 
 ## [v0.4.1] - 2026-11-09

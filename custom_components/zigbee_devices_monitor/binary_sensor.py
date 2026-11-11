@@ -12,7 +12,7 @@ import probatio
 import zigpy.types as t
 from zigpy.exceptions import ControllerException, DeliveryError
 
-from homeassistant.components import zha
+from homeassistant.components import persistent_notification, zha
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -477,6 +477,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
 
         gateway = self._require_zha_gateway()
         device_name = device_names.get(device_id, device_id)
+        notification_id = f"{DOMAIN}_recovery_failed_{device_id}"
         last_error: Exception | None = None
 
         for attempt in range(1, tries + 1):
@@ -496,6 +497,9 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                         ieee,
                         entity_ids,
                         attempt=attempt,
+                    )
+                    persistent_notification.async_dismiss(
+                        self._hass, notification_id
                     )
                     return True, device_name
             except (
@@ -529,6 +533,14 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             entity_ids,
             attempts=tries,
             reason=reason,
+        )
+        persistent_notification.async_create(
+            self._hass,
+            f"{device_name} ({ieee}) could not be recovered after "
+            f"{tries} attempt(s).\n\nReason: {reason}\n\n"
+            "Check device power and Zigbee connectivity before retrying.",
+            title="Zigbee Devices Monitor: recovery failed",
+            notification_id=notification_id,
         )
         return False, f"{device_name} ({ieee}): {reason}"
 
