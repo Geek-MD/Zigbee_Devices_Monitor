@@ -20,9 +20,9 @@
 
 A Home Assistant custom integration that monitors Zigbee device availability and exposes a single warning `binary_sensor`.
 
-## v0.4.1 update
+## v0.4.2 update
 
-Adds the Home Assistant 2026.11 Marketplace wireless-protocol classification. It includes the activity-aware recovery introduced in v0.4.0: the integration can detect when a previously unavailable ZHA device communicates again, emit an automation event, perform a full ZHA re-interview, rebuild its entities, and verify recovery. Existing configuration is preserved.
+Fixes recovery actions aborting automations with an unexpected `ValueError` when a device remains unavailable after all re-interview attempts. Both recovery actions now log a warning and expose failure details in `last_rediscover_failures`. Devices remain marked unavailable until their entities actually recover. Existing configuration is preserved.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
@@ -98,6 +98,7 @@ The integration creates one `binary_sensor` with:
   - `unavailable_devices`
   - `unavailable_device_ids`
   - `unavailable_device_ieee`
+  - `last_rediscover_failures` (failure descriptions from the latest recovery action)
   - `last_rediscovered_devices`
   - `last_rediscover_message`
 
@@ -128,6 +129,14 @@ The targeted entity action `zigbee_devices_monitor.reinterview_device`:
 - Can process the device even if recent activity already removed it from the unavailable list.
 - Supports `tries`, `delay`, and `recovery_timeout` with the same defaults as the bulk action.
 - Emits a recovery result event after verification.
+
+### Recovery failures
+
+If a device remains unavailable after all attempts, either recovery action records a warning and stores the failure description in `last_rediscover_failures` without raising an exception for that recovery result. Automations can continue and inspect this attribute or listen for `zigbee_devices_monitor_device_recovery_failed`. A completed action does not mean every device recovered: only devices with at least one available entity appear in `last_rediscovered_devices`.
+
+The bulk action refreshes availability after processing devices and clears previous recovery results even when there are no unavailable ZHA devices to process. Other errors, such as an unavailable ZHA gateway, can still fail the action.
+
+An unreachable device must regain power or Zigbee connectivity before it can respond to a re-interview.
 
 ## 📡 Events
 
