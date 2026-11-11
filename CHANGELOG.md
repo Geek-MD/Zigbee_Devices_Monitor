@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.4.2] - 2026-11-11
+
+### Fixed
+- Prevented bulk and targeted recovery actions from aborting automations with an unexpected `ValueError` when a device remains unavailable after all recovery attempts. These results are now logged as warnings; existing recovery failure events remain available.
+- Refresh availability after bulk recovery and clear stale results when there are no unavailable ZHA devices to process.
+
+### Added
+- Added a persistent notification per ZHA device when all configured recovery attempts are exhausted (three total attempts by default). Repeated failures update the same notification; a later successful recovery action dismisses it.
+- Added the `last_rediscover_failures` sensor attribute to expose failure descriptions from the latest recovery action alongside successfully recovered devices.
+
 ## [v0.4.1] - 2026-11-09
 
 ### Changed

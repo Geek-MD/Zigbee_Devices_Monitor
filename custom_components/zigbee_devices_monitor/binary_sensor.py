@@ -12,7 +12,7 @@ import probatio
 import zigpy.types as t
 from zigpy.exceptions import ControllerException, DeliveryError
 
-from homeassistant.components import zha
+from homeassistant.components import persistent_notification, zha
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -163,6 +163,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         self._last_seen_by_device: dict[str, float] = {}
         self._activity_event_fired: set[str] = set()
         self._unavailable_since_iso: dict[str, str] = {}
+        self._last_rediscover_failures: list[str] = []
         self._last_rediscovered_devices: list[str] = []
         self._last_rediscover_message: str | None = None
 
@@ -183,6 +184,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             "unavailable_devices": self._unavailable_devices,
             "unavailable_device_ids": self._unavailable_device_ids,
             "unavailable_device_ieee": self._unavailable_device_ieee,
+            "last_rediscover_failures": self._last_rediscover_failures,
             "last_rediscovered_devices": self._last_rediscovered_devices,
             "last_rediscover_message": self._last_rediscover_message,
         }
@@ -475,6 +477,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
 
         gateway = self._require_zha_gateway()
         device_name = device_names.get(device_id, device_id)
+        notification_id = f"{DOMAIN}_recovery_failed_{device_id}"
         last_error: Exception | None = None
 
         for attempt in range(1, tries + 1):
@@ -494,6 +497,9 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
                         ieee,
                         entity_ids,
                         attempt=attempt,
+                    )
+                    persistent_notification.async_dismiss(
+                        self._hass, notification_id
                     )
                     return True, device_name
             except (
@@ -528,6 +534,14 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             attempts=tries,
             reason=reason,
         )
+        persistent_notification.async_create(
+            self._hass,
+            f"{device_name} ({ieee}) could not be recovered after "
+            f"{tries} attempt(s).\n\nReason: {reason}\n\n"
+            "Check device power and Zigbee connectivity before retrying.",
+            title="Zigbee Devices Monitor: recovery failed",
+            notification_id=notification_id,
+        )
         return False, f"{device_name} ({ieee}): {reason}"
 
     async def async_reinterview_device(
@@ -544,12 +558,13 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             delay,
             recovery_timeout,
         )
+        self._last_rediscover_failures = [] if success else [result]
         self._last_rediscovered_devices = [result] if success else []
         self._last_rediscover_message = result if success else None
         self._process_states()
         self.async_write_ha_state()
         if not success:
-            raise ValueError(result)
+            _LOGGER.warning("ZHA device recovery failed: %s", result)
 
     async def async_rediscover_unavailable(
         self,
@@ -558,7 +573,10 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
         recovery_timeout: int,
         device_delay: float,
     ) -> None:
-        """Re-interview unavailable ZHA devices sequentially."""
+        """Re-interview unavailable ZHA devices without raising for offline devices."""
+        self._last_rediscovered_devices = []
+        self._last_rediscover_failures = []
+        self._last_rediscover_message = None
         self._process_states()
 
         unavailable_device_ids = [
@@ -567,6 +585,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             if device_id in self._zha_ieee_by_device
         ]
         if not unavailable_device_ids:
+            self.async_write_ha_state()
             return
 
         failures: list[str] = []
@@ -586,6 +605,7 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             if index < len(unavailable_device_ids) - 1 and device_delay > 0:
                 await asyncio.sleep(device_delay)
 
+        self._last_rediscover_failures = failures
         self._last_rediscovered_devices = rediscovered_devices
         if rediscovered_devices:
             self._last_rediscover_message = ", ".join(rediscovered_devices)
@@ -593,7 +613,8 @@ class ZigbeeWarningBinarySensor(BinarySensorEntity):
             self._last_rediscover_message = "No ZHA devices were recovered."
         else:
             self._last_rediscover_message = None
+        self._process_states()
         self.async_write_ha_state()
 
         if failures:
-            raise ValueError("; ".join(failures))
+            _LOGGER.warning("ZHA device recovery failed: %s", "; ".join(failures))
